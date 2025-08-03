@@ -17,10 +17,8 @@ export function useParametersView() {
             dragMimeTypes: ["text/uri-list"],
             dropMimeTypes: ["application/swapswap.parameter"],
             handleDrag(source, dataTransfer) {
-                dataTransfer.set(
-                    "application/swapswap.parameter",
-                    new vscode.DataTransferItem(source),
-                );
+                const transferItem = new vscode.DataTransferItem(source);
+                dataTransfer.set("application/swapswap.parameter", transferItem);
             },
             async handleDrop(target, dataTransfer) {
                 const transferItem = dataTransfer.get("application/swapswap.parameter");
@@ -37,12 +35,25 @@ export function useParametersView() {
                 ordered.splice(targetIndex, 0, ...nodes);
 
                 const { document } = activeTextEditor.value;
-                await sendTsServerRequest(
-                    "sortSignatureParameters",
+                const changes = await sendTsServerRequest(
+                    "swapSignatureParameters",
                     document.uri.fsPath,
                     document.offsetAt(selection.value.end),
                     ordered.map((node) => node.index),
-                );
+                ) ?? [];
+
+                for (const { fileName, textChanges } of changes) {
+                    const document = await vscode.workspace.openTextDocument(fileName);
+                    for (const { span, newText } of textChanges) {
+                        const edit = new vscode.WorkspaceEdit();
+                        const range = new vscode.Range(
+                            document.positionAt(span.start),
+                            document.positionAt(span.start + span.length),
+                        );
+                        edit.replace(document.uri, range, newText);
+                        await vscode.workspace.applyEdit(edit);
+                    }
+                }
 
                 data.value = ordered.map((node, index) => {
                     node.index = index;

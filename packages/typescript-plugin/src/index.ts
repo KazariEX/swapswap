@@ -1,6 +1,6 @@
 import type ts from "typescript";
 import { getSignatureParameters } from "./requests/getSignatureParameters";
-import { sortSignatureParameters } from "./requests/sortSignatureParameters";
+import { swapSignatureParameters } from "./requests/swapSignatureParameters";
 import type { RequestContext } from "./requests/types";
 
 const plugin: ts.server.PluginModuleFactory = (modules) => {
@@ -15,9 +15,9 @@ const plugin: ts.server.PluginModuleFactory = (modules) => {
                     response: getSignatureParameters.apply(getRequestContext(args[0]), args),
                 };
             });
-            session.addProtocolHandler("_swapswap:sortSignatureParameters", ({ arguments: args }) => {
+            session.addProtocolHandler("_swapswap:swapSignatureParameters", ({ arguments: args }) => {
                 return {
-                    response: sortSignatureParameters.apply(getRequestContext(args[0]), args),
+                    response: swapSignatureParameters.apply(getRequestContext(args[0]), args),
                 };
             });
 

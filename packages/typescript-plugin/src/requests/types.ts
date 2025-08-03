@@ -7,5 +7,5 @@ export interface RequestContext {
 
 export interface Requests {
     getSignatureParameters: typeof import("./getSignatureParameters")["getSignatureParameters"];
-    sortSignatureParameters: typeof import("./sortSignatureParameters")["sortSignatureParameters"];
+    swapSignatureParameters: typeof import("./swapSignatureParameters")["swapSignatureParameters"];
 }

@@ -1,10 +1,10 @@
-import type ts from "typescript";
+import { findSignatureDeclaration } from "./utils";
 import type { RequestContext } from "./types";
 
 export function getSignatureParameters(
     this: RequestContext | undefined,
     fileName: string,
-    offset: number,
+    position: number,
 ) {
     if (!this) {
         return [];
@@ -17,15 +17,7 @@ export function getSignatureParameters(
         return [];
     }
 
-    let decl: ts.SignatureDeclaration | undefined;
-
-    ts.forEachChild(sourceFile, function visit(node) {
-        if (ts.isFunctionLike(node) && node.pos <= offset && node.end >= offset) {
-            decl = node;
-        }
-        ts.forEachChild(node, visit);
-    });
-
+    const decl = findSignatureDeclaration(ts, sourceFile, position);
     if (!decl) {
         return [];
     }
