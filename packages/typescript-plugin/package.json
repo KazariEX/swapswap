@@ -29,7 +29,7 @@
   },
   "scripts": {
     "build": "tsdown",
-    "dev": "tsdown -w --sourcemap",
+    "dev": "tsdown -w",
     "prepack": "pnpm run build"
   },
   "devDependencies": {

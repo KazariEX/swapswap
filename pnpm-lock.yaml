@@ -37,7 +37,7 @@ catalogs:
       specifier: ^0.13.2
       version: 0.13.2
     typescript:
-      specifier: ^5.9.2
+      specifier: 5.9.2
       version: 5.9.2
 
 importers:
@@ -86,6 +86,9 @@ importers:
       reactive-vscode:
         specifier: 'catalog:'
         version: 0.3.1(@types/vscode@1.102.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.2
 
 packages:
 

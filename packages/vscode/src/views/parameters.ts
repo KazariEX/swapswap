@@ -1,5 +1,6 @@
-import { ref, type TreeViewNode, useActiveTextEditor, useTextEditorSelection, useTreeView, watch } from "reactive-vscode";
+import { ref, type TreeViewNode, useActiveTextEditor, useCommand, useTextEditorSelection, useTreeView, watch } from "reactive-vscode";
 import vscode from "vscode";
+import type ts from "typescript";
 import { sendTsServerRequest } from "../utils";
 
 interface ParameterNode extends TreeViewNode {
@@ -20,47 +21,27 @@ export function useParametersView() {
                 const transferItem = new vscode.DataTransferItem(source);
                 dataTransfer.set("application/swapswap.parameter", transferItem);
             },
-            async handleDrop(target, dataTransfer) {
+            handleDrop(target, dataTransfer) {
                 const transferItem = dataTransfer.get("application/swapswap.parameter");
                 const nodes = transferItem?.value as ParameterNode[] | undefined;
                 if (!nodes?.length || !selection.value || !activeTextEditor.value) {
                     return;
                 }
-
-                const sourceIndex = nodes[0].index;
-                const targetIndex = target?.index ?? Infinity;
-
-                const ordered = [...data.value];
-                ordered.splice(sourceIndex, 1);
-                ordered.splice(targetIndex, 0, ...nodes);
-
-                const { document } = activeTextEditor.value;
-                const changes = await sendTsServerRequest(
-                    "swapSignatureParameters",
-                    document.uri.fsPath,
-                    document.offsetAt(selection.value.end),
-                    ordered.map((node) => node.index),
-                ) ?? [];
-
-                for (const { fileName, textChanges } of changes) {
-                    const document = await vscode.workspace.openTextDocument(fileName);
-                    for (const { span, newText } of textChanges) {
-                        const edit = new vscode.WorkspaceEdit();
-                        const range = new vscode.Range(
-                            document.positionAt(span.start),
-                            document.positionAt(span.start + span.length),
-                        );
-                        edit.replace(document.uri, range, newText);
-                        await vscode.workspace.applyEdit(edit);
-                    }
-                }
-
-                data.value = ordered.map((node, index) => {
-                    node.index = index;
-                    return node;
-                });
+                swap(nodes[0], target?.index ?? Infinity);
             },
         },
+    });
+
+    useCommand("swapswap.parameters.forward", (node: ParameterNode) => {
+        swap(node, node.index - 1);
+    });
+
+    useCommand("swapswap.parameters.backward", (node: ParameterNode) => {
+        swap(node, node.index + 1);
+    });
+
+    useCommand("swapswap.parameters.delete", (node: ParameterNode) => {
+        swap(node);
     });
 
     const visible = ref(false);
@@ -91,4 +72,43 @@ export function useParametersView() {
             };
         }) ?? [];
     });
+
+    async function swap(node: ParameterNode, targetIndex?: number) {
+        const ordered = [...data.value];
+        ordered.splice(node.index, 1);
+
+        if (targetIndex !== void 0) {
+            ordered.splice(targetIndex, 0, node);
+        }
+
+        const { document } = activeTextEditor.value!;
+        const changes = await sendTsServerRequest(
+            "swapSignatureParameters",
+            document.uri.fsPath,
+            document.offsetAt(selection.value.end),
+            ordered.map((node) => node.index),
+        ) ?? [];
+
+        await applyTextChanges(changes);
+
+        data.value = ordered.map((node, index) => {
+            node.index = index;
+            return node;
+        });
+    }
+}
+
+async function applyTextChanges(changes: ts.FileTextChanges[]) {
+    for (const { fileName, textChanges } of changes) {
+        const document = await vscode.workspace.openTextDocument(fileName);
+        const edit = new vscode.WorkspaceEdit();
+        for (const { span, newText } of textChanges) {
+            const range = new vscode.Range(
+                document.positionAt(span.start),
+                document.positionAt(span.start + span.length),
+            );
+            edit.replace(document.uri, range, newText);
+        }
+        await vscode.workspace.applyEdit(edit);
+    }
 }

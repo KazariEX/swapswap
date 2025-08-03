@@ -25,16 +25,8 @@ export function swapSignatureParameters(
     }
 
     const changes: ts.FileTextChanges[] = [];
-
-    const change = calcTextChange(decl.parameters, sourceFile, orders);
-    if (change) {
-        changes.push({
-            fileName,
-            textChanges: [change],
-        });
-    }
-
     const references = languageService.getReferencesAtPosition(fileName, position) ?? [];
+
     const fileToTextSpans: Record<string, ts.TextSpan[]> = {};
     for (const reference of references) {
         (fileToTextSpans[reference.fileName] ??= []).push(reference.textSpan);
@@ -58,9 +50,26 @@ export function swapSignatureParameters(
         }
 
         changes.push({
-            fileName: sourceFile.fileName,
+            fileName,
             textChanges,
         });
+    }
+
+    const change = calcTextChange(decl.parameters, sourceFile, orders);
+    if (change) {
+        const i = changes.findIndex((c) => c.fileName === fileName);
+        if (i !== -1) {
+            changes[i] = {
+                fileName,
+                textChanges: [change, ...changes[i].textChanges],
+            };
+        }
+        else {
+            changes.push({
+                fileName,
+                textChanges: [change],
+            });
+        }
     }
 
     return changes;
@@ -81,10 +90,17 @@ function calcTextChange(
         .slice(0, -1)
         .map((arg, i) => sourceFile.text.slice(arg.getEnd(), args[i + 1].getStart()));
 
-    let newText = "";
-    for (let i = 0; i < args.length; i++) {
+    const segments: string[] = [];
+    for (let i = 0; i < orders.length; i++) {
         const order = orders[i];
-        newText += (args[order]?.getText(sourceFile) ?? "void 0") + (blanks[i] ?? "");
+        segments.push(args[order]?.getText(sourceFile));
+        if (i < orders.length - 1) {
+            segments.push(blanks[i] ?? ", ");
+        }
+    }
+
+    while (segments.length && segments.at(-1) === void 0) {
+        segments.splice(-2);
     }
 
     return {
@@ -92,6 +108,6 @@ function calcTextChange(
             start,
             length: end - start,
         },
-        newText,
+        newText: segments.map((s) => s ?? "null").join(""),
     };
 }

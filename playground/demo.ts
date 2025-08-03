@@ -1,5 +1,5 @@
-export function swap(a: number, b: string, c: boolean, d: symbol) {
-   void [a, b, c, d];
+export function swap(foo: number, bar: string, baz: boolean, qux: symbol) {
+   void [foo, bar, baz, qux];
 }
 
 swap(2, "3", true, Symbol(5));
