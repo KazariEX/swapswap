@@ -1,0 +1,38 @@
+{
+  "name": "@swapswap/typescript-plugin",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "TypeScript plugin for signature refactoring",
+  "author": "KazariEX",
+  "license": "MIT",
+  "repository": "KazariEX/swapswap",
+  "keywords": [],
+  "exports": {
+    ".": "./src/index.js",
+    "./requests": {
+      "types": "./src/requests/types.ts"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "exports": {
+      ".": "./dist/index.js",
+      "./requests": {
+        "types": "./dist/requests.d.ts"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown -w --sourcemap",
+    "prepack": "pnpm run build"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}

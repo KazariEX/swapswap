@@ -1,0 +1,48 @@
+{
+  "name": "@swapswap/vscode",
+  "displayName": "Swap Swap",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Signature refactoring tool for TypeScript",
+  "main": "./dist/index.js",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "swapswap",
+          "title": "Swap Swap",
+          "icon": "./resources/favicon.svg"
+        }
+      ]
+    },
+    "views": {
+      "swapswap": [
+        {
+          "id": "swapswap.parameters",
+          "name": "parameters",
+          "icon": "./resources/favicon.svg"
+        }
+      ]
+    },
+    "typescriptServerPlugins": [
+      {
+        "name": "swapswap-typescript-plugin",
+        "enableForWorkspaceTypeScriptVersions": true
+      }
+    ]
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown -w --sourcemap",
+    "prepack": "pnpm run build"
+  },
+  "devDependencies": {
+    "@swapswap/typescript-plugin": "workspace:",
+    "@types/vscode": "catalog:",
+    "@vscode/vsce": "catalog:",
+    "reactive-vscode": "catalog:"
+  }
+}

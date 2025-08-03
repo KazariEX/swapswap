@@ -1,0 +1,19 @@
+{
+  "type": "module",
+  "private": true,
+  "packageManager": "pnpm@10.14.0",
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm --filter @swapswap/vscode dev",
+    "release": "bumpp -r --no-push -c \"release: v%s\""
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "catalog:",
+    "@types/node": "catalog:",
+    "@zinkawaii/eslint-config": "catalog:",
+    "@zinkawaii/tsconfig": "catalog:",
+    "bumpp": "catalog:",
+    "eslint": "catalog:",
+    "tsdown": "catalog:"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Client",
+      "type": "extensionHost",
+      "request": "launch",
+      "autoAttachChildProcesses": true,
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceRoot}/packages/vscode",
+        "--folder-uri=${workspaceRoot}/playground"
+      ],
+      "outFiles": [
+        "${workspaceRoot}/**/*.js"
+      ]
+    }
+  ]
+}
