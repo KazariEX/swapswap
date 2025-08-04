@@ -5,6 +5,7 @@ import { sendTsServerRequest } from "../utils";
 
 interface ParameterNode extends TreeViewNode {
     index: number;
+    isRest?: boolean;
 }
 
 export function useParametersView() {
@@ -27,7 +28,7 @@ export function useParametersView() {
                 if (!nodes?.length || !selection.value || !activeTextEditor.value) {
                     return;
                 }
-                swap(nodes[0], target?.index ?? Infinity);
+                swap(nodes[0], target?.index ?? data.value.length - 1);
             },
         },
     });
@@ -62,23 +63,33 @@ export function useParametersView() {
             document.offsetAt(selection.value.end),
         );
 
-        data.value = parameters?.map(({ name, type }, index) => {
-            return {
-                index,
-                treeItem: {
-                    label: name,
-                    description: type,
-                },
-            };
-        }) ?? [];
+        data.value = parameters?.map(({ name, type, isRest }, index) => ({
+            index,
+            isRest,
+            treeItem: {
+                label: (isRest ? "..." : "") + name,
+                description: type,
+                tooltip: `<${name}: ${type}>`,
+                contextValue: isRest ? "rest" : void 0,
+            },
+        })) ?? [];
     });
 
-    async function swap(node: ParameterNode, targetIndex?: number) {
+    async function swap(node: ParameterNode, target?: number) {
+        if (target !== void 0) {
+            if (target >= data.value.length - 1 && data.value.at(-1)?.isRest) {
+                return;
+            }
+            if (target < data.value.length - 1 && node.isRest) {
+                return;
+            }
+        }
+
         const ordered = [...data.value];
         ordered.splice(node.index, 1);
 
-        if (targetIndex !== void 0) {
-            ordered.splice(targetIndex, 0, node);
+        if (target !== void 0) {
+            ordered.splice(target, 0, node);
         }
 
         const { document } = activeTextEditor.value!;
@@ -86,7 +97,8 @@ export function useParametersView() {
             "swapSignatureParameters",
             document.uri.fsPath,
             document.offsetAt(selection.value.end),
-            ordered.map((node) => node.index),
+            node.index,
+            target ?? (node.isRest ? 2333 : -1),
         ) ?? [];
 
         await applyTextChanges(changes);

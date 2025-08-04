@@ -28,9 +28,12 @@ export function getSignatureParameters(
 
     return signatures[0]?.getParameters().map((param) => {
         const type = checker.getTypeOfSymbol(param);
+        const decl = param.valueDeclaration;
+        const isRest = decl && ts.isParameter(decl) && ts.isRestParameter(decl) || void 0;
         return {
-            name: param.getName(),
+            name: param.name,
             type: checker.typeToString(type),
+            isRest,
         };
     }) ?? [];
 }

@@ -30,12 +30,12 @@
       "view/item/context": [
         {
           "command": "swapswap.parameters.forward",
-          "when": "view == swapswap.parameters",
+          "when": "view == swapswap.parameters && viewItem != rest",
           "group": "inline@1"
         },
         {
           "command": "swapswap.parameters.backward",
-          "when": "view == swapswap.parameters",
+          "when": "view == swapswap.parameters && viewItem != rest",
           "group": "inline@2"
         },
         {

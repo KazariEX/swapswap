@@ -6,7 +6,8 @@ export function swapSignatureParameters(
     this: RequestContext | undefined,
     fileName: string,
     position: number,
-    orders: number[],
+    from: number,
+    to: number,
 ) {
     if (!this) {
         return [];
@@ -43,10 +44,7 @@ export function swapSignatureParameters(
         const textChanges: ts.TextChange[] = [];
 
         for (const { arguments: args } of expressions) {
-            const change = calcTextChange(args, sourceFile, orders);
-            if (change) {
-                textChanges.push(change);
-            }
+            textChanges.push(...calcTextChanges(ts, sourceFile, args, from, to));
         }
 
         changes.push({
@@ -55,19 +53,19 @@ export function swapSignatureParameters(
         });
     }
 
-    const change = calcTextChange(decl.parameters, sourceFile, orders);
-    if (change) {
+    const textChanges = [...calcTextChanges(ts, sourceFile, decl.parameters, from, to)];
+    if (textChanges.length) {
         const i = changes.findIndex((c) => c.fileName === fileName);
         if (i !== -1) {
             changes[i] = {
                 fileName,
-                textChanges: [change, ...changes[i].textChanges],
+                textChanges: [...textChanges, ...changes[i].textChanges],
             };
         }
         else {
             changes.push({
                 fileName,
-                textChanges: [change],
+                textChanges,
             });
         }
     }
@@ -75,39 +73,46 @@ export function swapSignatureParameters(
     return changes;
 }
 
-function calcTextChange(
-    args: ts.NodeArray<ts.Node>,
+function* calcTextChanges(
+    ts: typeof import("typescript"),
     sourceFile: ts.SourceFile,
-    orders: number[],
-) {
-    if (!args.length) {
-        return;
-    }
-
-    const start = args[0].getStart(sourceFile);
-    const end = args.at(-1)!.getEnd();
-    const blanks = args
-        .slice(0, -1)
-        .map((arg, i) => sourceFile.text.slice(arg.getEnd(), args[i + 1].getStart()));
-
-    const segments: string[] = [];
-    for (let i = 0; i < orders.length; i++) {
-        const order = orders[i];
-        segments.push(args[order]?.getText(sourceFile));
-        if (i < orders.length - 1) {
-            segments.push(blanks[i] ?? ", ");
+    args: ts.NodeArray<ts.Node>,
+    from: number,
+    to: number,
+): Generator<ts.TextChange> {
+    if (to > -1 && to < 2333) {
+        const spreadIndex = args.findIndex((arg) => ts.isSpreadElement(arg));
+        if (spreadIndex !== -1 && spreadIndex <= Math.max(from, to)) {
+            return;
+        }
+        const step = from < to ? 1 : -1;
+        for (let i = from; from < to ? i <= to : i >= to; i += step) {
+            yield {
+                span: {
+                    start: args[i].getStart(sourceFile),
+                    length: args[i].getWidth(sourceFile),
+                },
+                newText: args[
+                    from < to ? (i < to ? i + 1 : from) : (i > to ? i - 1 : from)
+                ].getText(sourceFile),
+            };
         }
     }
-
-    while (segments.length && segments.at(-1) === void 0) {
-        segments.splice(-2);
+    else {
+        to = to === 2333 ? args.length - 1 : from;
+        const [start, end] = from ? [
+            args[from - 1].end,
+            args[to].end,
+        ] : [
+            args[from].getStart(sourceFile),
+            args[to + 1]?.getStart(sourceFile) ?? args[to].end,
+        ];
+        yield {
+            span: {
+                start: start,
+                length: end - start,
+            },
+            newText: "",
+        };
     }
-
-    return {
-        span: {
-            start,
-            length: end - start,
-        },
-        newText: segments.map((s) => s ?? "null").join(""),
-    };
 }
