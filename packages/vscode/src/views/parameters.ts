@@ -1,7 +1,7 @@
 import { ref, type TreeViewNode, useActiveTextEditor, useCommand, useTextEditorSelection, useTreeView, watch } from "reactive-vscode";
 import vscode from "vscode";
 import type ts from "typescript";
-import { sendTsServerRequest } from "../utils";
+import { requests } from "../requests";
 
 interface ParameterNode extends TreeViewNode {
     index: number;
@@ -57,13 +57,12 @@ export function useParametersView() {
         }
 
         const { document } = activeTextEditor.value;
-        const parameters = await sendTsServerRequest(
-            "getSignatureParameters",
+        const parameters = await requests.getSignatureParameters(
             document.uri.fsPath,
             document.offsetAt(selection.value.end),
-        );
+        ) ?? [];
 
-        data.value = parameters?.map(({ name, type, isRest }, index) => ({
+        data.value = parameters.map(({ name, type, isRest }, index) => ({
             index,
             isRest,
             treeItem: {
@@ -72,7 +71,7 @@ export function useParametersView() {
                 tooltip: `<${name}: ${type}>`,
                 contextValue: isRest ? "rest" : void 0,
             },
-        })) ?? [];
+        }));
     });
 
     async function swap(node: ParameterNode, target?: number) {
@@ -93,8 +92,7 @@ export function useParametersView() {
         }
 
         const { document } = activeTextEditor.value!;
-        const changes = await sendTsServerRequest(
-            "swapSignatureParameters",
+        const changes = await requests.swapSignatureParameters(
             document.uri.fsPath,
             document.offsetAt(selection.value.end),
             node.index,

@@ -5,7 +5,6 @@ export interface RequestContext {
     languageService: ts.LanguageService;
 }
 
-export interface Requests {
-    getSignatureParameters: typeof import("./getSignatureParameters")["getSignatureParameters"];
-    swapSignatureParameters: typeof import("./swapSignatureParameters")["swapSignatureParameters"];
-}
+export type Requests =
+    & Pick<typeof import("./getSignatureParameters"), "getSignatureParameters">
+    & Pick<typeof import("./swapSignatureParameters"), "swapSignatureParameters">;

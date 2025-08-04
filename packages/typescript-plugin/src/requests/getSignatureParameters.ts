@@ -26,7 +26,7 @@ export function getSignatureParameters(
     const signatureType = checker.getTypeAtLocation(decl);
     const signatures = checker.getSignaturesOfType(signatureType, ts.SignatureKind.Call);
 
-    return signatures[0]?.getParameters().map((param) => {
+    const result = signatures[0]?.getParameters().map((param) => {
         const type = checker.getTypeOfSymbol(param);
         const decl = param.valueDeclaration;
         const isRest = decl && ts.isParameter(decl) && ts.isRestParameter(decl) || void 0;
@@ -36,4 +36,10 @@ export function getSignatureParameters(
             isRest,
         };
     }) ?? [];
+
+    if (result[0]?.name === "this") {
+        result.shift();
+    }
+
+    return result;
 }

@@ -56,6 +56,14 @@ export function swapSignatureParameters(
         });
     }
 
+    const firstArg = decl.parameters[0];
+    if (firstArg && ts.isIdentifier(firstArg.name) && firstArg.name.text === "this") {
+        from += 1;
+        if (to > -1 && to < 2333) {
+            to += 1;
+        }
+    }
+
     const textChanges = [...calcTextChanges(ts, sourceFile, decl.parameters, from, to)];
     if (textChanges.length) {
         const i = changes.findIndex((c) => c.fileName === fileName);
