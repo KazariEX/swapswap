@@ -4,13 +4,15 @@
   "packageManager": "pnpm@10.14.0",
   "scripts": {
     "build": "pnpm -r build",
-    "dev": "pnpm --filter @swapswap/vscode dev",
+    "dev": "pnpm --filter swapswap dev",
+    "prepare": "zin link vscode",
     "release": "bumpp -r --no-push -c \"release: v%s\""
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:",
     "@types/node": "catalog:",
     "@zinkawaii/eslint-config": "catalog:",
+    "@zinkawaii/scripts": "catalog:",
     "@zinkawaii/tsconfig": "catalog:",
     "bumpp": "catalog:",
     "eslint": "catalog:",

@@ -9,9 +9,14 @@ catalog:
   "@types/vscode": ^1.102.0
   "@vscode/vsce": ^3.6.0
   "@zinkawaii/eslint-config": ^0.3.0
+  "@zinkawaii/scripts": ^0.0.3
   "@zinkawaii/tsconfig": 0.0.2
   bumpp: ^10.2.2
   eslint: ^9.32.0
   reactive-vscode: ^0.3.1
   tsdown: ^0.13.2
   typescript: 5.9.2
+
+onlyBuiltDependencies:
+  - "@vscode/vsce-sign"
+  - keytar

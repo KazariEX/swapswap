@@ -5,4 +5,5 @@ export default defineConfig({
         index: "./src/index.ts",
         requests: "./src/requests/types.ts",
     },
+    format: "cjs",
 });

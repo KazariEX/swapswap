@@ -1,11 +1,24 @@
 {
-  "name": "@swapswap/vscode",
+  "publisher": "KazariEX",
+  "name": "swapswap",
   "displayName": "Swap Swap",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
-  "description": "Signature refactoring tool for TypeScript",
+  "description": "Signature refactoring tools for TypeScript",
+  "author": "KazariEX",
+  "license": "MIT",
+  "repository": "KazariEX/swapswap",
+  "categories": [
+    "Other"
+  ],
   "main": "./dist/index.js",
   "icon": "./resources/logo.png",
+  "files": [
+    "LICENSE",
+    "dist",
+    "node_modules",
+    "resources"
+  ],
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -74,7 +87,8 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown -w --sourcemap",
-    "prepack": "pnpm run build"
+    "prepack": "pnpm run build",
+    "pack": "zin vsce package --no-dependencies"
   },
   "devDependencies": {
     "@swapswap/typescript-plugin": "workspace:",
