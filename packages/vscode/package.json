@@ -5,6 +5,7 @@
   "private": true,
   "description": "Signature refactoring tool for TypeScript",
   "main": "./dist/index.js",
+  "icon": "./resources/logo.png",
   "engines": {
     "vscode": "^1.99.0"
   },
@@ -50,7 +51,7 @@
         {
           "id": "swapswap",
           "title": "Swap Swap",
-          "icon": "./resources/favicon.svg"
+          "icon": "./resources/logo.svg"
         }
       ]
     },
@@ -59,7 +60,7 @@
         {
           "id": "swapswap.parameters",
           "name": "parameters",
-          "icon": "./resources/favicon.svg"
+          "icon": "./resources/logo.svg"
         }
       ]
     },
