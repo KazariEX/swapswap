@@ -26,7 +26,10 @@ export function swapSignatureParameters(
     }
 
     const changes: ts.FileTextChanges[] = [];
-    const references = languageService.getReferencesAtPosition(fileName, position) ?? [];
+    const references = languageService.getReferencesAtPosition(
+        fileName,
+        decl.name?.getStart(sourceFile) ?? position,
+    ) ?? [];
 
     const fileToTextSpans: Record<string, ts.TextSpan[]> = {};
     for (const reference of references) {

@@ -11,7 +11,7 @@ export function findSignatureDeclaration(
     return decl;
 
     function visit(node: ts.Node) {
-        if (ts.isFunctionLike(node) && position >= node.pos && position <= node.end) {
+        if (ts.isFunctionLike(node) && position >= node.getStart(sourceFile) && position <= node.end) {
             decl = node;
         }
         ts.forEachChild(node, visit);
