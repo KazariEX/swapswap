@@ -111,9 +111,9 @@ export function useParametersView() {
 }
 
 async function applyTextChanges(changes: ts.FileTextChanges[]) {
+    const edit = new vscode.WorkspaceEdit();
     for (const { fileName, textChanges } of changes) {
         const document = await vscode.workspace.openTextDocument(fileName);
-        const edit = new vscode.WorkspaceEdit();
         for (const { span, newText } of textChanges) {
             const range = new vscode.Range(
                 document.positionAt(span.start),
@@ -121,6 +121,8 @@ async function applyTextChanges(changes: ts.FileTextChanges[]) {
             );
             edit.replace(document.uri, range, newText);
         }
-        await vscode.workspace.applyEdit(edit);
     }
+    await vscode.workspace.applyEdit(edit, {
+        isRefactoring: true,
+    });
 }
