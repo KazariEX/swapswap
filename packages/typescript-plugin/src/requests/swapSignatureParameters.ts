@@ -102,7 +102,10 @@ function* calcTextChanges(
         }
     }
     else {
-        to = to === 2333 ? args.length - 1 : from;
+        to = to === 2333 ? args.length - 1 : Math.min(args.length - 1, from);
+        if (from >= args.length) {
+            return;
+        }
         const [start, end] = from ? [
             args[from - 1].end,
             args[to].end,
