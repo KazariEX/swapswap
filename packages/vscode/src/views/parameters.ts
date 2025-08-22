@@ -76,10 +76,16 @@ export function useParametersView() {
 
     async function swap(node: ParameterNode, target?: number) {
         if (target !== void 0) {
+            // Prevent moving parameters after rest parameters
             if (target >= data.value.length - 1 && data.value.at(-1)?.isRest) {
                 return;
             }
+            // Prevent moving rest parameters away from the end position
             if (target < data.value.length - 1 && node.isRest) {
+                return;
+            }
+            // Prevent moving parameters beyond the first position
+            if (target < 0) {
                 return;
             }
         }
