@@ -44,25 +44,6 @@ export function* findSignatureReferences(
         if (!node) {
             continue;
         }
-        if (ts.isCallExpression(node.parent)) {
-            yield [fileName, node.parent];
-            continue;
-        }
-        if (ts.isCallExpression(node.parent.parent)) {
-            yield [fileName, node.parent.parent];
-            continue;
-        }
-        if (ts.isFunctionLike(node.parent)) {
-            yield [fileName, node.parent];
-            continue;
-        }
-        if (
-            (ts.isPropertyAssignment(node.parent) || ts.isPropertyDeclaration(node.parent))
-            && ts.isFunctionLike(node.parent.initializer)
-        ) {
-            yield [fileName, node.parent.initializer];
-            continue;
-        }
 
         function visit(child: ts.Node) {
             if (
@@ -75,12 +56,47 @@ export function* findSignatureReferences(
             return ts.forEachChild<ts.Identifier>(child, visit);
         }
 
+        // swap(...)
+        if (
+            ts.isCallExpression(node.parent)
+            && node === node.parent.expression
+        ) {
+            yield [fileName, node.parent];
+            continue;
+        }
+        // foo.swap(...)
+        if (
+            ts.isPropertyAccessExpression(node.parent)
+            && node === node.parent.name
+            && ts.isCallExpression(node.parent.parent)
+            && node.parent === node.parent.parent.expression
+        ) {
+            yield [fileName, node.parent.parent];
+            continue;
+        }
+        // swap(...) {}
+        if (
+            ts.isFunctionLike(node.parent)
+            && node === node.parent.name
+        ) {
+            yield [fileName, node.parent];
+            continue;
+        }
+        // swap: (...) => {}
+        if (
+            (ts.isPropertyAssignment(node.parent) || ts.isPropertyDeclaration(node.parent))
+            && ts.isFunctionLike(node.parent.initializer)
+        ) {
+            yield [fileName, node.parent.initializer];
+            continue;
+        }
+
         let start: number | undefined;
 
         // const foo = { swap: swap };
         //               ^^^^  ^^^^
         if (
-            ts.isPropertyAssignment(node.parent)
+            (ts.isPropertyAssignment(node.parent) || ts.isPropertyDeclaration(node.parent))
             && node === node.parent.initializer
         ) {
             start = node.parent.name.getStart(sourceFile);
