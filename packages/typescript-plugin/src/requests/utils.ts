@@ -1,38 +1,5 @@
 import type ts from "typescript";
 
-export function findCallExpressions(
-    ts: typeof import("typescript"),
-    sourceFile: ts.SourceFile,
-    textSpans: ts.TextSpan[],
-) {
-    const results: ts.CallExpression[] = [];
-    let spanIndex = 0;
-    let currentSpan = textSpans[spanIndex++];
-
-    visit(sourceFile);
-    return results;
-
-    function visit(node: ts.Node) {
-        if (ts.isCallExpression(node)) {
-            let identifier = node.expression;
-            if (ts.isPropertyAccessExpression(identifier)) {
-                identifier = identifier.name;
-            }
-            if (inCurrentSpan(identifier.getStart(sourceFile))) {
-                results.push(node);
-            }
-        }
-        node.forEachChild(visit);
-    }
-
-    function inCurrentSpan(pos: number) {
-        while (currentSpan && pos > currentSpan.start + currentSpan.length - 1) {
-            currentSpan = textSpans[spanIndex++];
-        }
-        return currentSpan && pos >= currentSpan.start && pos < currentSpan.start + currentSpan.length;
-    }
-}
-
 export function findSignatureDeclaration(
     ts: typeof import("typescript"),
     sourceFile: ts.SourceFile,
@@ -57,17 +24,16 @@ export function* findSignatureReferences(
     fileName: string,
     position: number,
     visited = new Set<string>(),
-): Generator<ts.ReferenceEntry> {
+): Generator<[string, ts.CallExpression | ts.SignatureDeclaration]> {
     const program = languageService.getProgram()!;
     const references = languageService.getReferencesAtPosition(fileName, position) ?? [];
 
-    for (const reference of references) {
-        const key = reference.fileName + "@" + reference.textSpan.start;
+    for (const { fileName, textSpan } of references) {
+        const key = fileName + "@" + textSpan.start;
         if (visited.has(key)) {
             continue;
         }
         visited.add(key);
-        yield reference;
 
         const sourceFile = program.getSourceFile(fileName);
         if (!sourceFile) {
@@ -75,19 +41,34 @@ export function* findSignatureReferences(
         }
 
         const node = visit(sourceFile);
+        if (!node) {
+            continue;
+        }
+        if (ts.isCallExpression(node.parent)) {
+            yield [fileName, node.parent];
+            continue;
+        }
+        if (ts.isCallExpression(node.parent.parent)) {
+            yield [fileName, node.parent.parent];
+            continue;
+        }
+        if (ts.isFunctionLike(node.parent)) {
+            yield [fileName, node.parent];
+            continue;
+        }
         if (
-            node === void 0
-            || ts.isCallExpression(node.parent)
-            || ts.isCallExpression(node.parent.parent)
+            (ts.isPropertyAssignment(node.parent) || ts.isPropertyDeclaration(node.parent))
+            && ts.isFunctionLike(node.parent.initializer)
         ) {
+            yield [fileName, node.parent.initializer];
             continue;
         }
 
         function visit(child: ts.Node) {
             if (
                 ts.isIdentifier(child)
-                && reference.textSpan.start >= child.getStart(sourceFile)
-                && reference.textSpan.start <= child.end
+                && textSpan.start >= child.getStart(sourceFile)
+                && textSpan.start <= child.end
             ) {
                 return child;
             }
@@ -125,7 +106,7 @@ export function* findSignatureReferences(
         yield* findSignatureReferences(
             ts,
             languageService,
-            reference.fileName,
+            fileName,
             start,
             visited,
         );

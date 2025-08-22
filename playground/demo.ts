@@ -8,7 +8,9 @@ o1.swap(2, "3", true, Symbol(5));
 const o2 = { swap };
 o2.swap(2, "3", true, Symbol(5));
 
-const o3 = {} as { swap: typeof swap };
+const o3: { swap: typeof swap } = {
+    swap: (foo, bar, baz, qux) => {},
+};
 o3.swap(2, "3", true, Symbol(5));
 
 function rest(foo: number, bar: string, ...args: any[]) {}

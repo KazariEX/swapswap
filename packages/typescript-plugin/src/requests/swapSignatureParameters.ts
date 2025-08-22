@@ -1,5 +1,5 @@
 import type ts from "typescript";
-import { findCallExpressions, findSignatureDeclaration, findSignatureReferences } from "./utils";
+import { findSignatureDeclaration, findSignatureReferences } from "./utils";
 import type { RequestContext } from "./types";
 
 export function swapSignatureParameters(
@@ -25,66 +25,41 @@ export function swapSignatureParameters(
         return [];
     }
 
-    const changes: ts.FileTextChanges[] = [];
-    const fileToTextSpans: Record<string, ts.TextSpan[]> = {};
+    const fileTextChanges: Record<string, ts.TextChange[]> = {};
+    const references = findSignatureReferences(
+        ts,
+        languageService,
+        fileName,
+        decl.name?.getStart(sourceFile) ?? position,
+    );
 
-    for (
-        const reference of findSignatureReferences(
-            ts,
-            languageService,
-            fileName,
-            decl.name?.getStart(sourceFile) ?? position,
-        )
-    ) {
-        (fileToTextSpans[reference.fileName] ??= []).push(reference.textSpan);
-    }
-
-    for (const [fileName, textSpans] of Object.entries(fileToTextSpans)) {
+    for (const [fileName, node] of references) {
         const sourceFile = program.getSourceFile(fileName);
         if (!sourceFile) {
             return [];
         }
+        const textChanges = fileTextChanges[fileName] ??= [];
 
-        textSpans.sort((a, b) => a.start - b.start);
-        const expressions = findCallExpressions(ts, sourceFile, textSpans);
-        const textChanges: ts.TextChange[] = [];
-
-        for (const { arguments: args } of expressions) {
-            textChanges.push(...calcTextChanges(ts, sourceFile, args, from, to));
-        }
-
-        changes.push({
-            fileName,
-            textChanges,
-        });
-    }
-
-    const firstArg = decl.parameters[0];
-    if (firstArg && ts.isIdentifier(firstArg.name) && firstArg.name.text === "this") {
-        from += 1;
-        if (to > -1 && to < 2333) {
-            to += 1;
-        }
-    }
-
-    const textChanges = [...calcTextChanges(ts, sourceFile, decl.parameters, from, to)];
-    if (textChanges.length) {
-        const i = changes.findIndex((c) => c.fileName === fileName);
-        if (i !== -1) {
-            changes[i] = {
-                fileName,
-                textChanges: [...textChanges, ...changes[i].textChanges],
-            };
+        if (ts.isCallExpression(node)) {
+            textChanges.push(...calcTextChanges(ts, sourceFile, node.arguments, from, to));
         }
         else {
-            changes.push({
-                fileName,
-                textChanges,
-            });
+            let [from2, to2] = [from, to];
+            const firstArg = node.parameters[0];
+            if (firstArg && ts.isIdentifier(firstArg.name) && firstArg.name.text === "this") {
+                from2 += 1;
+                if (to2 > -1 && to2 < 2333) {
+                    to2 += 1;
+                }
+            }
+            textChanges.push(...calcTextChanges(ts, sourceFile, node.parameters, from2, to2));
         }
     }
 
-    return changes;
+    return Object.entries(fileTextChanges).map<ts.FileTextChanges>(([fileName, textChanges]) => ({
+        fileName,
+        textChanges,
+    }));
 }
 
 function* calcTextChanges(
