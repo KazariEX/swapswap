@@ -32,7 +32,11 @@ export function findCallExpressions(
 
     function visit(node: ts.Node) {
         if (ts.isCallExpression(node)) {
-            if (inCurrentSpan(node.expression.getStart(sourceFile))) {
+            let identifier = node.expression;
+            if (ts.isPropertyAccessExpression(identifier)) {
+                identifier = identifier.name;
+            }
+            if (inCurrentSpan(identifier.getStart(sourceFile))) {
                 results.push(node);
             }
         }
