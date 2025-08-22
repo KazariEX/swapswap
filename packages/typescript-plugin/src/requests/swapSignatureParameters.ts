@@ -1,5 +1,5 @@
 import type ts from "typescript";
-import { findCallExpressions, findSignatureDeclaration } from "./utils";
+import { findCallExpressions, findSignatureDeclaration, findSignatureReferences } from "./utils";
 import type { RequestContext } from "./types";
 
 export function swapSignatureParameters(
@@ -26,13 +26,16 @@ export function swapSignatureParameters(
     }
 
     const changes: ts.FileTextChanges[] = [];
-    const references = languageService.getReferencesAtPosition(
-        fileName,
-        decl.name?.getStart(sourceFile) ?? position,
-    ) ?? [];
-
     const fileToTextSpans: Record<string, ts.TextSpan[]> = {};
-    for (const reference of references) {
+
+    for (
+        const reference of findSignatureReferences(
+            ts,
+            languageService,
+            fileName,
+            decl.name?.getStart(sourceFile) ?? position,
+        )
+    ) {
         (fileToTextSpans[reference.fileName] ??= []).push(reference.textSpan);
     }
 
