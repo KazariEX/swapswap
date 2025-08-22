@@ -6,9 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@antfu/eslint-config':
-      specifier: ^5.2.1
-      version: 5.2.1
     '@types/node':
       specifier: ^24.3.0
       version: 24.3.0
@@ -47,9 +44,6 @@ importers:
 
   .:
     devDependencies:
-      '@antfu/eslint-config':
-        specifier: 'catalog:'
-        version: 5.2.1(@vue/compiler-sfc@3.5.18)(eslint@9.33.0(jiti@2.5.1))(typescript@5.9.2)
       '@types/node':
         specifier: 'catalog:'
         version: 24.3.0

@@ -9,7 +9,6 @@
     "release": "bumpp -r --no-push -c \"release: v%s\""
   },
   "devDependencies": {
-    "@antfu/eslint-config": "catalog:",
     "@types/node": "catalog:",
     "@zinkawaii/eslint-config": "catalog:",
     "@zinkawaii/scripts": "catalog:",
