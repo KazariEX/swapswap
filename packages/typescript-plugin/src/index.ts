@@ -39,4 +39,4 @@ const plugin: ts.server.PluginModuleFactory = (modules) => {
     return pluginModule;
 };
 
-export = plugin;
+export default plugin;

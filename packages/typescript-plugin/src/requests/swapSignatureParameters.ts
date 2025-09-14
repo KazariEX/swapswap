@@ -101,7 +101,7 @@ function* calcTextChanges(
         ];
         yield {
             span: {
-                start: start,
+                start,
                 length: end - start,
             },
             newText: "",

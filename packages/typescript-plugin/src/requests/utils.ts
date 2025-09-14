@@ -28,7 +28,7 @@ export function* findSignatureReferences(
     const program = languageService.getProgram()!;
     const references = languageService.getReferencesAtPosition(fileName, position) ?? [];
 
-    for (const { fileName, textSpan } of references) {
+    outer: for (const { fileName, textSpan } of references) {
         const key = fileName + "@" + textSpan.start;
         if (visited.has(key)) {
             continue;
@@ -85,46 +85,103 @@ export function* findSignatureReferences(
         // swap: (...) => {}
         if (
             (ts.isPropertyAssignment(node.parent) || ts.isPropertyDeclaration(node.parent))
-            && ts.isFunctionLike(node.parent.initializer)
+            && node === node.parent.name
         ) {
-            yield [fileName, node.parent.initializer];
+            const signature = getUnwrappedSignature(ts, node.parent.initializer);
+            if (signature) {
+                yield [fileName, signature];
+            }
             continue;
         }
 
-        let start: number | undefined;
+        let start: number;
+        let curr: ts.Node = node;
 
-        // const foo = { swap: swap };
-        //               ^^^^  ^^^^
-        if (
-            (ts.isPropertyAssignment(node.parent) || ts.isPropertyDeclaration(node.parent))
-            && node === node.parent.initializer
-        ) {
-            start = node.parent.name.getStart(sourceFile);
-        }
-        // const foo = { swap };
-        //               ^^^^
-        else if (ts.isShorthandPropertyAssignment(node.parent)) {
-            start = node.getStart(sourceFile);
-        }
-        // const foo = {} as { swap: typeof swap };
-        //                     ^^^^         ^^^^
-        else if (
-            ts.isTypeQueryNode(node.parent)
-            && node === node.parent.exprName
-            && ts.isPropertySignature(node.parent.parent)
-        ) {
-            start = node.parent.parent.name.getStart(sourceFile);
-        }
-        else {
-            continue;
+        inner: while (curr) {
+            // const foo = swap;
+            //       ^^^   ^^^^
+            if (
+                ts.isVariableDeclaration(curr.parent)
+                && curr === curr.parent.initializer
+            ) {
+                start = curr.parent.name.getStart(sourceFile);
+            }
+            // const foo = { swap: swap };
+            //               ^^^^  ^^^^
+            else if (
+                (ts.isPropertyAssignment(curr.parent) || ts.isPropertyDeclaration(curr.parent))
+                && curr === curr.parent.initializer
+            ) {
+                start = curr.parent.name.getStart(sourceFile);
+            }
+            // const foo = { swap };
+            //               ^^^^
+            else if (ts.isShorthandPropertyAssignment(curr.parent)) {
+                start = curr.getStart(sourceFile);
+            }
+            // const foo: typeof swap = {};
+            //       ^^^         ^^^^
+            else if (
+                ts.isTypeQueryNode(curr.parent)
+                && curr === curr.parent.exprName
+                && ts.isVariableDeclaration(curr.parent.parent)
+            ) {
+                const signature = getUnwrappedSignature(ts, curr.parent.parent.initializer);
+                if (signature) {
+                    yield [fileName, signature];
+                }
+                start = curr.parent.parent.name.getStart(sourceFile);
+            }
+            // const foo = {} as typeof swap;
+            //       ^^^                ^^^^
+            else if (
+                ts.isTypeQueryNode(curr.parent)
+                && curr === curr.parent.exprName
+                && ts.isAsExpression(curr.parent.parent)
+            ) {
+                const signature = getUnwrappedSignature(ts, curr.parent.parent.expression);
+                if (signature) {
+                    yield [fileName, signature];
+                }
+                curr = curr.parent.parent;
+                continue inner;
+            }
+            // const foo = {} as { swap: typeof swap };
+            //                     ^^^^         ^^^^
+            else if (
+                ts.isTypeQueryNode(curr.parent)
+                && curr === curr.parent.exprName
+                && ts.isPropertySignature(curr.parent.parent)
+            ) {
+                start = curr.parent.parent.name.getStart(sourceFile);
+            }
+            else {
+                continue outer;
+            }
+            break;
         }
 
         yield* findSignatureReferences(
             ts,
             languageService,
             fileName,
-            start,
+            start!,
             visited,
         );
+    }
+}
+
+function getUnwrappedSignature(ts: typeof import("typescript"), node?: ts.Node) {
+    if (!node) {
+        return;
+    }
+    while (ts.isParenthesizedExpression(node)) {
+        node = node.expression;
+        if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.CommaToken) {
+            node = node.right;
+        }
+    }
+    if (ts.isFunctionLike(node)) {
+        return node;
     }
 }
