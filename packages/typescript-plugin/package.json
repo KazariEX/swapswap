@@ -1,6 +1,6 @@
 {
   "name": "@swapswap/typescript-plugin",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "TypeScript plugin for signature refactoring",
   "author": "KazariEX",
   "license": "MIT",

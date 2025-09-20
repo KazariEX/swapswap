@@ -2,7 +2,7 @@
   "publisher": "KazariEX",
   "name": "swapswap",
   "displayName": "Swap Swap",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "description": "Signature refactoring tools for TypeScript",
   "author": "KazariEX",
