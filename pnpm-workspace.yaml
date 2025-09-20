@@ -4,18 +4,19 @@ packages:
   - packages/*
 
 catalog:
-  "@types/node": ^24.3.0
-  "@types/vscode": ^1.103.0
+  "@types/node": ^24.5.2
+  "@types/vscode": ^1.104.0
   "@vscode/vsce": ^3.6.0
   "@zinkawaii/eslint-config": ^0.4.1
   "@zinkawaii/scripts": ^0.0.3
   "@zinkawaii/tsconfig": ^0.0.2
   bumpp: ^10.2.3
-  eslint: ^9.33.0
-  reactive-vscode: ^0.3.1
-  tsdown: ^0.14.1
+  eslint: ^9.36.0
+  reactive-vscode: ^0.3.2
+  tsdown: ^0.15.3
   typescript: ^5.9.2
 
 onlyBuiltDependencies:
   - "@vscode/vsce-sign"
   - keytar
+  - rolldown

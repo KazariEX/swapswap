@@ -8,9 +8,8 @@
   "keywords": [],
   "exports": {
     ".": "./src/index.ts",
-    "./requests": {
-      "types": "./src/requests/types.ts"
-    }
+    "./requests": "./src/requests/types.ts",
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,9 +19,8 @@
   "publishConfig": {
     "exports": {
       ".": "./dist/index.js",
-      "./requests": {
-        "types": "./dist/requests.d.ts"
-      }
+      "./requests": "./dist/requests.js",
+      "./package.json": "./package.json"
     }
   },
   "scripts": {

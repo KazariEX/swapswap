@@ -85,7 +85,7 @@
     ]
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown --minify",
     "dev": "tsdown -w --sourcemap",
     "prepack": "pnpm run build",
     "pack": "zin vsce package --no-dependencies"

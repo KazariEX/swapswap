@@ -6,4 +6,7 @@ export default defineConfig({
         requests: "./src/requests/types.ts",
     },
     format: "cjs",
+    exports: {
+        devExports: true,
+    },
 });
